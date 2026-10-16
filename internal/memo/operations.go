@@ -2,13 +2,15 @@ package memo
 
 import (
 	"errors"
-	"strconv"
+	"fmt"
 	"strings"
 	"time"
 )
 
+var ErrNotFound = errors.New("memo not found")
+
 func newNotFoundError(id int) error {
-	return errors.New("memo not found: " + strconv.Itoa(id))
+	return fmt.Errorf("%w: %d", ErrNotFound, id)
 }
 
 func CreateMemo(memos []Memo, title string, body string, now time.Time) Memo {

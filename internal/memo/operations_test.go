@@ -1,6 +1,7 @@
 package memo_test
 
 import (
+	"errors"
 	"testing"
 	"time"
 
@@ -73,7 +74,11 @@ func TestFindById_NotFound(t *testing.T) {
 		t.Fatalf("findById any match")
 	}
 
+	// CLIのエラーメッセージを変えずに、呼び出し側が「メモが存在しない」と判別できること
 	assertEqualsMessage(t, actual.Error(), "memo not found: 2")
+	if !errors.Is(actual, memo.ErrNotFound) {
+		t.Errorf("err = %v, expected memo.ErrNotFound", actual)
+	}
 }
 
 func TestFilterMemos(t *testing.T) {
