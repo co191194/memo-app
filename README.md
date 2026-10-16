@@ -7,8 +7,8 @@
 Go 1.26.4以降が必要です（[go.mod](go.mod)を参照）。リポジトリを取得してビルドします。
 
 ```bash
-git clone https://github.com/co191194/memo-cli.git
-cd memo-cli
+git clone https://github.com/co191194/memo-app.git
+cd memo-app
 go build -o memo ./cmd/memo
 ```
 
@@ -113,7 +113,7 @@ go build ./...
 
 ## 開発の背景
 
-v0.1のMVPでは `add`、`list`、`show`、`search`、`delete` とJSONへの永続化を段階的に実装しました。当時の「これから作る」開発手順や仮のディレクトリ構成は、現行のセットアップ手順・仕様ではありません。過去の状態は[v0.1.0タグ](https://github.com/co191194/memo-cli/tree/v0.1.0)、v0.2の要件と受け入れ基準は[開発文書](docs/development/v0.2/requirements.md)と[仕様書](docs/development/v0.2/specification.md)を参照してください。現在の実装は `cmd/memo`、`internal/cli`、`internal/memo`、`internal/storage` に分かれています。
+v0.1のMVPでは `add`、`list`、`show`、`search`、`delete` とJSONへの永続化を段階的に実装しました。当時の「これから作る」開発手順や仮のディレクトリ構成は、現行のセットアップ手順・仕様ではありません。過去の状態は[v0.1.0タグ](https://github.com/co191194/memo-app/tree/v0.1.0)、v0.2の要件と受け入れ基準は[開発文書](docs/development/v0.2/requirements.md)と[仕様書](docs/development/v0.2/specification.md)を参照してください。現在の実装は `cmd/memo`、`internal/cli`、`internal/memo`、`internal/storage` に分かれています。
 
 将来的な拡張候補には、タグ機能、SQLite対応、Markdown出力などがあります。`edit`、`MEMO_PATH`、CIはv0.2で対応済みです。
 

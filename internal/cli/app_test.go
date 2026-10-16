@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/co191194/memo-cli/internal/cli"
+	"github.com/co191194/memo-app/internal/cli"
 )
 
 type fakeMemoCommand struct {

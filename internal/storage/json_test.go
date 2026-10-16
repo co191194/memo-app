@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/co191194/memo-cli/internal/memo"
-	"github.com/co191194/memo-cli/internal/storage"
+	"github.com/co191194/memo-app/internal/memo"
+	"github.com/co191194/memo-app/internal/storage"
 )
 
 type Memo = memo.Memo
