@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/co191194/memo-cli/internal/memo"
+	"github.com/co191194/memo-app/internal/memo"
 )
 
 type Memo = memo.Memo

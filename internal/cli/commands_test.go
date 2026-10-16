@@ -9,9 +9,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/co191194/memo-cli/internal/cli"
-	"github.com/co191194/memo-cli/internal/memo"
-	"github.com/co191194/memo-cli/internal/storage"
+	"github.com/co191194/memo-app/internal/cli"
+	"github.com/co191194/memo-app/internal/memo"
+	"github.com/co191194/memo-app/internal/storage"
 )
 
 type fakeTimeProvider struct {
