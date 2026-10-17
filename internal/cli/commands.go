@@ -1,15 +1,22 @@
 package cli
 
 import (
+	"context"
 	"errors"
 	"flag"
 	"fmt"
 	"io"
+	"net"
+	"os"
+	"os/signal"
 	"strconv"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/co191194/memo-app/internal/memo"
+	"github.com/co191194/memo-app/internal/service"
+	"github.com/co191194/memo-app/internal/web"
 )
 
 type MemoCommand interface {
@@ -19,6 +26,7 @@ type MemoCommand interface {
 	SearchMemos(stdout io.Writer, stderr io.Writer, args []string) int
 	DeleteMemo(stdout io.Writer, stderr io.Writer, args []string) int
 	EditMemo(stdout io.Writer, stderr io.Writer, args []string) int
+	Serve(stdout io.Writer, stderr io.Writer, args []string) int
 }
 
 type TimeProvider interface {
@@ -391,6 +399,54 @@ func parseEditInput(options editOptions, now time.Time) memo.EditMemoInput {
 		Body:  options.Body,
 		Now:   now,
 	}
+}
+
+type serveOptions struct {
+	Port int
+}
+
+func (cmd *MemoCommandImpl) Serve(stdout io.Writer, stderr io.Writer, args []string) int {
+
+	options, err := parseServeArgs(stderr, args)
+	if err != nil {
+		return resolveParseErrorExitCode(err)
+	}
+
+	ln, err := net.Listen("tcp", "127.0.0.1:"+strconv.Itoa(options.Port))
+	if err != nil {
+		fmt.Fprintln(stderr, "サーバーの待ち受けを開始できませんでした", err)
+		return 1
+	}
+
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+
+	defer stop()
+
+	fmt.Fprintln(stdout, "Listening on http://127.0.0.1:"+strconv.Itoa(ln.Addr().(*net.TCPAddr).Port))
+
+	handler := web.NewHandler(&service.MemoService{MemoPath: cmd.MemoPath, Loader: cmd.StorageOperator})
+
+	if err := web.Serve(ctx, ln, handler, 5*time.Second); err != nil {
+		fmt.Fprintln(stderr, err.Error())
+		return 1
+	}
+
+	return 0
+}
+
+func parseServeArgs(stderr io.Writer, args []string) (serveOptions, error) {
+	var options serveOptions
+
+	fs := newCommandFlagSet("serve", "memo serve [--port <port>]", stderr)
+
+	fs.IntVar(&options.Port, "port", 8080, "ポート番号")
+
+	_, err := parseCommandArgs(fs, args, 0)
+	if err != nil {
+		return serveOptions{}, err
+	}
+
+	return options, nil
 }
 
 func printOpenFileError(stderr io.Writer, err error) {

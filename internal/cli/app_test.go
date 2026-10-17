@@ -82,6 +82,16 @@ func (cmd *fakeMemoCommand) EditMemo(stdout io.Writer, stderr io.Writer, args []
 	return 0
 }
 
+func (cmd *fakeMemoCommand) Serve(stdout io.Writer, stderr io.Writer, args []string) int {
+	fmt.Fprint(stdout, "Called Serve()")
+
+	if len(args) != 0 {
+		fmt.Fprint(stderr, "Failed Serve()")
+		return 1
+	}
+	return 0
+}
+
 func TestRun_EditMemo(t *testing.T) {
 	args := []string{"1", "--title", "Updated Title", "--body", "Updated Body"}
 	command := &fakeMemoCommand{}
@@ -137,6 +147,7 @@ func TestRun(t *testing.T) {
 		{"ShowMemo()を呼ぶ", []string{"show", "1"}, "Called ShowMemo()"},
 		{"SearchMemos()を呼ぶ", []string{"search", "Jack"}, "Called SearchMemos()"},
 		{"DeleteMemo()を呼ぶ", []string{"delete", "3"}, "Called DeleteMemo()"},
+		{"Serve()を呼ぶ", []string{"serve"}, "Called Serve()"},
 	}
 
 	for _, tc := range testCases {
@@ -180,6 +191,7 @@ func TestRun_PrintHelp(t *testing.T) {
 	sb.WriteString("  show    Show a memo\n")
 	sb.WriteString("  search  Search memos\n")
 	sb.WriteString("  delete  delete a memo\n")
+	sb.WriteString("  serve   Start the web server\n")
 
 	expected := sb.String()
 
@@ -237,7 +249,8 @@ func TestHelp(t *testing.T) {
 		"  list    List memos\n" +
 		"  show    Show a memo\n" +
 		"  search  Search memos\n" +
-		"  delete  delete a memo\n"
+		"  delete  delete a memo\n" +
+		"  serve   Start the web server\n"
 
 	for _, tc := range testCases {
 		t.Run(tc.testName, func(t *testing.T) {
