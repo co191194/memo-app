@@ -418,11 +418,11 @@ func (cmd *MemoCommandImpl) Serve(stdout io.Writer, stderr io.Writer, args []str
 		return 1
 	}
 
-	fmt.Fprintln(stdout, "Listening on http://127.0.0.1:"+strconv.Itoa(ln.Addr().(*net.TCPAddr).Port))
-
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 
 	defer stop()
+
+	fmt.Fprintln(stdout, "Listening on http://127.0.0.1:"+strconv.Itoa(ln.Addr().(*net.TCPAddr).Port))
 
 	handler := web.NewHandler(&service.MemoService{MemoPath: cmd.MemoPath, Loader: cmd.StorageOperator})
 
