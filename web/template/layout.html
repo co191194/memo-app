@@ -1,0 +1,16 @@
+{{define "layout"}}
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{block "title" .}}Memo App{{end}}</title>
+    <link rel="stylesheet" href="/static/style.css" />
+  </head>
+  <body>
+    <header><a href="/memos">Memo App</a></header>
+    <main>{{block "content" .}}{{end}}</main>
+    <footer>MIT License / Copyright (c) 2026 co191194</footer>
+  </body>
+</html>
+{{end}}

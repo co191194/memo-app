@@ -16,4 +16,5 @@ func PrintHelp(writer io.Writer) {
 	fmt.Fprintln(writer, "  show    Show a memo")
 	fmt.Fprintln(writer, "  search  Search memos")
 	fmt.Fprintln(writer, "  delete  delete a memo")
+	fmt.Fprintln(writer, "  serve   Start the web server")
 }
