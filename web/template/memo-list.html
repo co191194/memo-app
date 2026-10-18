@@ -1,0 +1,26 @@
+{{define "title"}}メモ一覧 - memo{{end}}
+{{define "content"}}
+{{ if . }}
+<table>
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>タイトル</th>
+      <th>作成日</th>
+    </tr>
+  </thead>
+  <tbody>
+    {{ range . }}
+    <tr>
+      <td>{{ .ID }}</td>
+      <td><a href="/memos/{{.ID}}">{{ .Title }}</a></td>
+      <td>{{ .CreatedAt.Format "2006-01-02" }}</td>
+    </tr>
+    {{ end }}
+  </tbody>
+</table>
+{{ else }}
+<p>メモはありません</p>
+{{end}}
+{{end}}
+
