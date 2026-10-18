@@ -68,7 +68,7 @@ func (h *handler) getMemosHandler(w http.ResponseWriter, r *http.Request) {
 	memos, err := h.memos.ListMemos()
 	if err != nil {
 		errorTitle := "メモを読み込めませんでした"
-		fmt.Fprintln(h.errorLog, errorTitle, err)
+		h.printError(errorTitle, err)
 		h.executeErrorTemplate(w, http.StatusInternalServerError, errorTitle)
 		return
 	}
@@ -81,7 +81,7 @@ func (h *handler) executeTemplate(w http.ResponseWriter, statusCode int, t *temp
 	w.WriteHeader(statusCode)
 	if err := t.ExecuteTemplate(w, "layout", data); err != nil {
 		errMsg := "テンプレートの展開に失敗しました"
-		fmt.Fprintln(h.errorLog, errMsg, err)
+		h.printError(errMsg, err)
 	}
 }
 
@@ -91,4 +91,8 @@ func (h *handler) executeErrorTemplate(w http.ResponseWriter, statusCode int, er
 
 func (h *handler) executeOkTemplate(w http.ResponseWriter, t *template.Template, data any) {
 	h.executeTemplate(w, http.StatusOK, t, data)
+}
+
+func (h *handler) printError(errMsg string, err error) {
+	fmt.Fprintf(h.errorLog, "%s: %q\n", errMsg, err)
 }

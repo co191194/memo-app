@@ -2,6 +2,7 @@ package web_test
 
 import (
 	"bytes"
+	"errors"
 	"html/template"
 	"io"
 	"net/http"
@@ -368,4 +369,54 @@ func request(t *testing.T, method string, url string) clientResponse {
 		t.Fatalf("read %s %s body: %v", method, url, err)
 	}
 	return clientResponse{resp.StatusCode, resp.Header.Get("Content-Type"), string(body)}
+}
+
+// failingMemoReader は、読み込みに必ず失敗するMemoReader。
+type failingMemoReader struct {
+	err error
+}
+
+func (f *failingMemoReader) ListMemos() ([]Memo, error) {
+	return nil, f.err
+}
+
+func (f *failingMemoReader) GetMemo(id int) (Memo, error) {
+	return Memo{}, f.err
+}
+
+// 読み込みエラーに改行が含まれていても、標準エラーへは1行で出す（Spec 6章）。
+// 保存先のパスに改行が含まれると、os.PathError のメッセージにもそのまま残る。
+func TestHandler_MemoList_LoadFailureLogIsOneLine(t *testing.T) {
+	testCases := []struct {
+		testName string
+		message  string
+	}{
+		{"LFを含む場合", "read /tmp/bad\nname: is a directory"},
+		{"CRLFを含む場合", "read /tmp/bad\r\nname: is a directory"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.testName, func(t *testing.T) {
+			var errorLog bytes.Buffer
+			handler := web.NewHandler(&failingMemoReader{err: errors.New(tc.message)}, &errorLog)
+
+			rec := serve(t, handler, http.MethodGet, "/memos")
+
+			if rec.Code != http.StatusInternalServerError {
+				t.Errorf("status = %d, expected = %d", rec.Code, http.StatusInternalServerError)
+			}
+
+			log := errorLog.String()
+			// 末尾の改行だけを持つ1行であること。CRも行頭へ戻って表示を乱すので含めない
+			if strings.Count(log, "\n") != 1 || !strings.HasSuffix(log, "\n") || strings.Contains(log, "\r") {
+				t.Errorf("errorLog = %q, expected exactly one line without CR", log)
+			}
+			// 改行の前後どちらの部分も失わずに出力していること
+			for _, part := range []string{"read /tmp/bad", "name: is a directory"} {
+				if !strings.Contains(log, part) {
+					t.Errorf("errorLog = %q, expected to contain %q", log, part)
+				}
+			}
+		})
+	}
 }
