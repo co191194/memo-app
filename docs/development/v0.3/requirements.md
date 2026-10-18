@@ -53,13 +53,13 @@ v0.3の主目的はGoの学習である。HTTPサーバー、サーバーサイ�
 
 | 要件ID | 優先順位 | 要件 | 成功条件 | 関連Issue |
 |---|---|---|---|---|
-| R-01 | Must | 利用者は、コマンドからローカルのWebサーバーを起動・停止できる。 | `memo serve` で起動したサーバーにブラウザからアクセスでき、終了操作で停止する。 | 未作成 |
-| R-02 | Must | 利用者は、保存済みメモの一覧をブラウザで確認できる。 | 保存済みのメモが一覧に表示され、各メモの詳細へ移動できる。メモが0件でも画面を表示できる。 | 未作成 |
-| R-03 | Must | 利用者は、メモの詳細をブラウザで確認できる。 | タイトル、本文、作成日時、更新日時が表示され、本文の改行が保たれる。存在しないメモはその旨が分かる。 | 未作成 |
-| R-04 | Must | CLIとWebは、同じ保存先とメモ操作の処理を共有する。 | 保存先の決定（`MEMO_PATH` を含む）がCLIと同じで、CLIで保存した内容がWebに表示される。Webはサービス層を通じてメモを読み込む。 | 未作成 |
-| R-05 | Must | v0.3への更新後も、既存のCLIと保存済みデータを継続して利用できる。 | v0.2のCLIコマンドが同じように動作し、既存JSONデータを移行操作なしで読み込める。 | 未作成 |
-| R-06 | Must | 主要な正常系を自動検証し、変更による不具合を検出できる。 | R-01〜R-04の主要な正常系がテストされ、CIのテスト・静的チェック・ビルドが成功する。 | 未作成 |
-| R-07 | Must | 利用者は、READMEからWeb画面の起動方法と使い方を理解できる。 | READMEに `memo serve` の使い方と制約が記載され、リリースノートが用意される。 | 未作成 |
+| R-01 | Must | 利用者は、コマンドからローカルのWebサーバーを起動・停止できる。 | `memo serve` で起動したサーバーにブラウザからアクセスでき、終了操作で停止する。 | [#45](https://github.com/co191194/memo-app/issues/45)、[#46](https://github.com/co191194/memo-app/issues/46) |
+| R-02 | Must | 利用者は、保存済みメモの一覧をブラウザで確認できる。 | 保存済みのメモが一覧に表示され、各メモの詳細へ移動できる。メモが0件でも画面を表示できる。 | [#45](https://github.com/co191194/memo-app/issues/45)、[#46](https://github.com/co191194/memo-app/issues/46) |
+| R-03 | Must | 利用者は、メモの詳細をブラウザで確認できる。 | タイトル、本文、作成日時、更新日時が表示され、本文の改行が保たれる。存在しないメモはその旨が分かる。 | [#47](https://github.com/co191194/memo-app/issues/47) |
+| R-04 | Must | CLIとWebは、同じ保存先とメモ操作の処理を共有する。 | 保存先の決定（`MEMO_PATH` を含む）がCLIと同じで、CLIで保存した内容がWebに表示される。Webはサービス層を通じてメモを読み込む。 | [#44](https://github.com/co191194/memo-app/issues/44)、[#46](https://github.com/co191194/memo-app/issues/46)、[#47](https://github.com/co191194/memo-app/issues/47) |
+| R-05 | Must | v0.3への更新後も、既存のCLIと保存済みデータを継続して利用できる。 | v0.2のCLIコマンドが同じように動作し、既存JSONデータを移行操作なしで読み込める。 | [#44](https://github.com/co191194/memo-app/issues/44)、[#45](https://github.com/co191194/memo-app/issues/45)、[#46](https://github.com/co191194/memo-app/issues/46)、[#47](https://github.com/co191194/memo-app/issues/47) |
+| R-06 | Must | 主要な正常系を自動検証し、変更による不具合を検出できる。 | R-01〜R-04の主要な正常系がテストされ、CIのテスト・静的チェック・ビルドが成功する。 | [#44](https://github.com/co191194/memo-app/issues/44)、[#45](https://github.com/co191194/memo-app/issues/45)、[#46](https://github.com/co191194/memo-app/issues/46)、[#47](https://github.com/co191194/memo-app/issues/47) |
+| R-07 | Must | 利用者は、READMEからWeb画面の起動方法と使い方を理解できる。 | READMEに `memo serve` の使い方と制約が記載され、リリースノートが用意される。 | [#48](https://github.com/co191194/memo-app/issues/48) |
 
 ## 5. v0.3全体の成功条件
 
@@ -133,3 +133,7 @@ Requirement工程に未決事項はない。Spec工程では、URL、ステー�
 - Spec作成を妨げるRequirement上の未決事項がない。
 
 上記をプロジェクト所有者が2026-10-16に確認し、草案v0.3をRequirement v1.0として承認した。
+
+## 変更記録
+
+- 2026-10-18：プロジェクト所有者の指示により、4章の「関連Issue」を作成済みのIssue番号に更新した。各要件と関係する受け入れ基準を扱ったIssueを記載している。要件・成功条件・対象外の内容は変更していない。
