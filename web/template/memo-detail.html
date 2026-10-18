@@ -1,0 +1,15 @@
+{{define "title"}}{{.Title}} - memo{{end}}
+{{define "content"}}
+<h1>{{.Title}}</h1>
+<div>ID<span class="delimiter">:</span><span>{{.ID}}</span></div>
+<div>作成日時<span class="delimiter">:</span>{{.CreatedAt.Format "2006-01-02 15:04"}}</div>
+<div>更新日時<span class="delimiter">:</span>{{.UpdatedAt.Format "2006-01-02 15:04"}}</div>
+{{if .Body}}
+<pre>
+{{.Body}}</pre>
+{{else}}
+<div>本文はありません</div>
+{{end}}
+{{end}}
+
+

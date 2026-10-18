@@ -1,10 +1,12 @@
 package web
 
 import (
+	"errors"
 	"fmt"
 	"html/template"
 	"io"
 	"net/http"
+	"strconv"
 
 	"github.com/co191194/memo-app/internal/memo"
 	assets "github.com/co191194/memo-app/web"
@@ -19,8 +21,9 @@ func NewHandler(memos MemoReader, errorLog io.Writer) http.Handler {
 	mux := http.NewServeMux()
 
 	h := handler{
-		errorTemplate: template.Must(template.ParseFS(assets.FS, "template/layout.html", "template/error.html")),
-		memoList:      template.Must(template.ParseFS(assets.FS, "template/layout.html", "template/memo-list.html")),
+		errorTemplate: getTemplate("error"),
+		memoList:      getTemplate("memo-list"),
+		memoDetail:    getTemplate("memo-detail"),
 		memos:         memos,
 		errorLog:      errorLog,
 	}
@@ -32,13 +35,20 @@ func NewHandler(memos MemoReader, errorLog io.Writer) http.Handler {
 	mux.HandleFunc("/static/style.css", methodNotAllowedHandler)
 	mux.HandleFunc("GET /memos", h.getMemosHandler)
 	mux.HandleFunc("/memos", methodNotAllowedHandler)
+	mux.HandleFunc("GET /memos/{id}", h.getMemoHandler)
+	mux.HandleFunc("/memos/{id}", methodNotAllowedHandler)
 
 	return mux
+}
+
+func getTemplate(pageName string) *template.Template {
+	return template.Must(template.ParseFS(assets.FS, "template/layout.html", "template/"+pageName+".html"))
 }
 
 type handler struct {
 	errorTemplate *template.Template
 	memoList      *template.Template
+	memoDetail    *template.Template
 	memos         MemoReader
 	errorLog      io.Writer
 }
@@ -74,6 +84,31 @@ func (h *handler) getMemosHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.executeOkTemplate(w, h.memoList, memos)
+}
+
+func (h *handler) getMemoHandler(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil || id <= 0 {
+		h.executeNotFoundMemo(w)
+		return
+	}
+	m, err := h.memos.GetMemo(id)
+	if err != nil {
+		if errors.Is(err, memo.ErrNotFound) {
+			h.executeNotFoundMemo(w)
+		} else {
+			errMsg := "メモを読み込めませんでした"
+			h.printError(errMsg, err)
+			h.executeErrorTemplate(w, http.StatusInternalServerError, errMsg)
+		}
+		return
+	}
+
+	h.executeOkTemplate(w, h.memoDetail, m)
+}
+
+func (h *handler) executeNotFoundMemo(w http.ResponseWriter) {
+	h.executeErrorTemplate(w, http.StatusNotFound, "メモが見つかりません")
 }
 
 func (h *handler) executeTemplate(w http.ResponseWriter, statusCode int, t *template.Template, data any) {

@@ -8,9 +8,11 @@
     <link rel="stylesheet" href="/static/style.css" />
   </head>
   <body>
-    <header><a href="/memos">Memo App</a></header>
-    <main>{{block "content" .}}{{end}}</main>
-    <footer>MIT License / Copyright (c) 2026 co191194</footer>
+    <div class="container">
+      <header class="header"><a href="/memos">Memo App</a></header>
+      <main class="main">{{block "content" .}}{{end}}</main>
+      <footer class="footer">MIT License / Copyright (c) 2026 co191194</footer>
+    </div>
   </body>
 </html>
 {{end}}
