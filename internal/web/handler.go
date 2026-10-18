@@ -1,7 +1,9 @@
 package web
 
 import (
+	"fmt"
 	"html/template"
+	"io"
 	"net/http"
 
 	"github.com/co191194/memo-app/internal/memo"
@@ -13,11 +15,14 @@ type MemoReader interface {
 	GetMemo(id int) (memo.Memo, error)
 }
 
-func NewHandler(memos MemoReader) http.Handler {
+func NewHandler(memos MemoReader, errorLog io.Writer) http.Handler {
 	mux := http.NewServeMux()
 
 	h := handler{
-		notFound: template.Must(template.ParseFS(assets.FS, "template/layout.html", "template/not-found.html")),
+		errorTemplate: template.Must(template.ParseFS(assets.FS, "template/layout.html", "template/error.html")),
+		memoList:      template.Must(template.ParseFS(assets.FS, "template/layout.html", "template/memo-list.html")),
+		memos:         memos,
+		errorLog:      errorLog,
 	}
 
 	mux.HandleFunc("/", h.notFoundHandler)
@@ -25,19 +30,25 @@ func NewHandler(memos MemoReader) http.Handler {
 	mux.HandleFunc("/{$}", methodNotAllowedHandler)
 	mux.HandleFunc("GET /static/style.css", styleHandler)
 	mux.HandleFunc("/static/style.css", methodNotAllowedHandler)
+	mux.HandleFunc("GET /memos", h.getMemosHandler)
+	mux.HandleFunc("/memos", methodNotAllowedHandler)
 
 	return mux
 }
 
 type handler struct {
-	notFound *template.Template
+	errorTemplate *template.Template
+	memoList      *template.Template
+	memos         MemoReader
+	errorLog      io.Writer
+}
+
+type errorData struct {
+	Title string
 }
 
 func (h *handler) notFoundHandler(w http.ResponseWriter, r *http.Request) {
-
-	w.Header().Set("Content-type", "text/html; charset=utf-8")
-	w.WriteHeader(http.StatusNotFound)
-	h.notFound.ExecuteTemplate(w, "layout", nil)
+	h.executeErrorTemplate(w, http.StatusNotFound, "ページが見つかりません")
 }
 
 func redirectHandler(w http.ResponseWriter, r *http.Request) {
@@ -51,4 +62,33 @@ func methodNotAllowedHandler(w http.ResponseWriter, r *http.Request) {
 
 func styleHandler(w http.ResponseWriter, r *http.Request) {
 	http.ServeFileFS(w, r, assets.FS, "static/style.css")
+}
+
+func (h *handler) getMemosHandler(w http.ResponseWriter, r *http.Request) {
+	memos, err := h.memos.ListMemos()
+	if err != nil {
+		errorTitle := "メモを読み込めませんでした"
+		fmt.Fprintln(h.errorLog, errorTitle, err)
+		h.executeErrorTemplate(w, http.StatusInternalServerError, errorTitle)
+		return
+	}
+
+	h.executeOkTemplate(w, h.memoList, memos)
+}
+
+func (h *handler) executeTemplate(w http.ResponseWriter, statusCode int, t *template.Template, data any) {
+	w.Header().Set("Content-type", "text/html; charset=utf-8")
+	w.WriteHeader(statusCode)
+	if err := t.ExecuteTemplate(w, "layout", data); err != nil {
+		errMsg := "テンプレートの展開に失敗しました"
+		fmt.Fprintln(h.errorLog, errMsg, err)
+	}
+}
+
+func (h *handler) executeErrorTemplate(w http.ResponseWriter, statusCode int, errorTitle string) {
+	h.executeTemplate(w, statusCode, h.errorTemplate, errorData{Title: errorTitle})
+}
+
+func (h *handler) executeOkTemplate(w http.ResponseWriter, t *template.Template, data any) {
+	h.executeTemplate(w, http.StatusOK, t, data)
 }

@@ -4,12 +4,14 @@ import (
 	"bufio"
 	"bytes"
 	"errors"
+	"io"
 	"net"
 	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"strings"
 	"syscall"
 	"testing"
 	"time"
@@ -185,4 +187,98 @@ func TestServeProcess(t *testing.T) {
 			}
 		})
 	}
+}
+
+// AC-08
+func TestServeProcessMemoList(t *testing.T) {
+	binary := buildMemo(t)
+	cwd := t.TempDir()
+	home := t.TempDir()
+	memoPath := filepath.Join(cwd, "memos.json")
+
+	// CLIで追加したメモを、同じ保存先で起動したサーバーが表示する
+	expectProcess(t, runMemo(t, binary, cwd, home, memoPath, "add", "Added from CLI"), 0, "", "")
+
+	p := startServe(t, binary, cwd, home, memoPath, "--port", "0")
+	status, body := getMemoList(t, p.url)
+
+	if status != http.StatusOK {
+		t.Errorf("GET /memos status = %d, expected = %d", status, http.StatusOK)
+	}
+	if !strings.Contains(body, "Added from CLI") {
+		t.Errorf("GET /memos body = %q, expected to contain %q", body, "Added from CLI")
+	}
+	p.stop(t, syscall.SIGINT)
+}
+
+// getMemoList は GET /memos を送り、ステータスと本文を返す。
+func getMemoList(t *testing.T, baseURL string) (int, string) {
+	t.Helper()
+
+	resp := getWithoutRedirect(t, baseURL+"/memos")
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		t.Fatalf("read GET /memos body: %v", err)
+	}
+	return resp.StatusCode, string(body)
+}
+
+// AC-17
+func TestServeProcessReadsMemosPerRequest(t *testing.T) {
+	binary := buildMemo(t)
+	cwd := t.TempDir()
+	home := t.TempDir()
+	memoPath := filepath.Join(cwd, "memos.json")
+
+	p := startServe(t, binary, cwd, home, memoPath, "--port", "0")
+
+	// 起動時点ではまだ表示されない
+	if _, body := getMemoList(t, p.url); strings.Contains(body, "Added while serving") {
+		t.Fatalf("GET /memos body = %q, expected not to contain the memo before it is added", body)
+	}
+
+	// サーバーを動かしたままCLIで追加すると、再起動せずに表示される
+	expectProcess(t, runMemo(t, binary, cwd, home, memoPath, "add", "Added while serving"), 0, "", "")
+
+	status, body := getMemoList(t, p.url)
+	if status != http.StatusOK {
+		t.Errorf("GET /memos status = %d, expected = %d", status, http.StatusOK)
+	}
+	if !strings.Contains(body, "Added while serving") {
+		t.Errorf("GET /memos body = %q, expected to contain %q", body, "Added while serving")
+	}
+	p.stop(t, syscall.SIGINT)
+}
+
+// AC-24
+func TestServeProcessRecoversFromLoadFailure(t *testing.T) {
+	binary := buildMemo(t)
+	cwd := t.TempDir()
+	home := t.TempDir()
+	memoPath := filepath.Join(cwd, "memos.json")
+	if err := os.WriteFile(memoPath, []byte("{invalid"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	// 起動時には保存先を読み込まないので、不正なJSONでも起動に成功する
+	p := startServe(t, binary, cwd, home, memoPath, "--port", "0")
+
+	if status, _ := getMemoList(t, p.url); status != http.StatusInternalServerError {
+		t.Errorf("1st GET /memos status = %d, expected = %d", status, http.StatusInternalServerError)
+	}
+
+	// JSONを有効な内容に直すと、同じサーバーが次のリクエストで表示できる
+	validJSON := `[{"id":1,"title":"Recovered memo","body":"","created_at":"2026-10-18T09:00:00Z","updated_at":"2026-10-18T09:00:00Z"}]`
+	if err := os.WriteFile(memoPath, []byte(validJSON), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	status, body := getMemoList(t, p.url)
+	if status != http.StatusOK {
+		t.Errorf("2nd GET /memos status = %d, expected = %d", status, http.StatusOK)
+	}
+	if !strings.Contains(body, "Recovered memo") {
+		t.Errorf("2nd GET /memos body = %q, expected to contain %q", body, "Recovered memo")
+	}
+	p.stop(t, syscall.SIGINT)
 }
