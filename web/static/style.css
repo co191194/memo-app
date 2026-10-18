@@ -1,4 +1,49 @@
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
 
-html {
-  width: 100vw;
+pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.delimiter {
+  margin: 0 0.5rem;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+}
+
+.header {
+  height: 40px;
+  flex-shrink:0;
+  display: flex;
+  align-items: center;
+  padding: 0 0.5rem;
+  background-color: azure;
+}
+
+.main {
+  flex-grow: 1;
+  overflow-y: auto;
+  padding: 0.5rem;
+}
+
+.footer {
+  height: 36px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  padding: 0 0.5rem;
+  background-color: darkblue;
+  color: white;
+}
+
+h1 {
+  margin: 0;
 }
